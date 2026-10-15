@@ -1,0 +1,8 @@
+I (1200) wifi:connected with CMCC-Demo, aid = 1, channel 6
+I (1300) esp_netif_handlers: sta ip: 192.168.1.88
+I (1310) Application: Got IP: 192.168.1.88
+I (1400) MQTT: Connecting to broker botelv115200.com:1883
+I (1500) MQTT: Connected
+I (1600) Application: Device is ready!
+I (1700) Application: STATE: idle
+I (1800) Ota: Checking http://139.224.114.243:8002/ota/

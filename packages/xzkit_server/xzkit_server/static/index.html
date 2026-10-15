@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Xiaozhi Kit Console</title>
+  <style>
+    :root {
+      --bg: #0f1419; --panel: #1a2332; --border: #2a3a4f; --text: #e7eef7;
+      --muted: #8fa3b8; --accent: #3d9cf0; --ok: #3ecf8e; --warn: #f0b429; --bad: #f07178;
+      --mono: Consolas, "Cascadia Code", monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: "Segoe UI", sans-serif; color: var(--text);
+      background: radial-gradient(1100px 560px at 8% -8%, #1c3a5a 0%, transparent 55%), var(--bg);
+      min-height: 100vh;
+    }
+    #root { max-width: 1200px; margin: 0 auto; padding: 1.25rem; }
+    header h1 { margin: 0; font-size: 1.35rem; }
+    header p { margin: .25rem 0 1rem; color: var(--muted); font-size: .9rem; }
+    .grid { display: grid; grid-template-columns: 280px 1fr; gap: 1rem; }
+    @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+    .panel {
+      background: color-mix(in srgb, var(--panel) 92%, transparent);
+      border: 1px solid var(--border); border-radius: 10px; padding: .9rem;
+    }
+    .panel h2 {
+      margin: 0 0 .75rem; font-size: .85rem; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .06em;
+    }
+    label { display: block; font-size: .8rem; color: var(--muted); margin-bottom: .25rem; }
+    select, input[type=text], input[type=number] {
+      width: 100%; background: #0c1118; color: var(--text); border: 1px solid var(--border);
+      border-radius: 6px; padding: .45rem .55rem; margin-bottom: .65rem;
+    }
+    .row { display: flex; flex-wrap: wrap; gap: .45rem; margin-bottom: .65rem; }
+    button {
+      background: var(--accent); color: #041018; border: none; border-radius: 6px;
+      padding: .45rem .75rem; cursor: pointer; font-weight: 600;
+    }
+    button.secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    .card {
+      border: 1px solid var(--border); border-radius: 8px; padding: .7rem;
+      margin-bottom: .65rem; background: #121a24;
+    }
+    .status { font-size: 1.1rem; font-weight: 700; }
+    .ok { color: var(--ok); } .warn { color: var(--warn); } .bad { color: var(--bad); }
+    .meta { font-size: .85rem; color: var(--muted); margin-top: .35rem; }
+    .logbox {
+      height: min(62vh, 560px); overflow: auto; font-family: var(--mono); font-size: .78rem;
+      line-height: 1.45; background: #0c1118; border: 1px solid var(--border);
+      border-radius: 8px; padding: .6rem; white-space: pre-wrap; word-break: break-all;
+    }
+    .tag { color: var(--accent); margin-right: .35rem; }
+    .filters { display: flex; gap: .75rem; margin-bottom: .55rem; font-size: .85rem; color: var(--muted); }
+    .filters label { display: inline-flex; align-items: center; gap: .3rem; margin: 0; }
+  </style>
+</head>
+<body>
+  <div id="root">
+    <header>
+      <h1>Xiaozhi Kit</h1>
+      <p>Local serial console — logs, send, reset, SoftAP provision</p>
+    </header>
+    <div class="grid">
+      <aside>
+        <div class="panel">
+          <h2>Connection</h2>
+          <label>Port</label>
+          <select id="port"></select>
+          <label>Baud</label>
+          <input id="baud" type="number" value="115200" />
+          <div class="row">
+            <button id="btnConnect">Connect</button>
+            <button class="secondary" id="btnDisconnect">Disconnect</button>
+            <button class="secondary" id="btnRefresh">Refresh</button>
+          </div>
+          <div class="meta" id="connMeta">Idle</div>
+          <div class="meta bad" id="err"></div>
+        </div>
+        <div class="panel">
+          <h2>Provision</h2>
+          <div class="card">
+            <div class="status" id="provStatus">unknown</div>
+            <div class="meta" id="provSoftap">SoftAP: —</div>
+            <div class="meta" id="provUrl">URL: —</div>
+            <div class="meta" id="provIp">IP: —</div>
+            <div class="meta" id="provMqtt">MQTT: —</div>
+          </div>
+          <div class="row"><button class="secondary" id="btnPortal">Open portal</button></div>
+          <div class="meta" id="provHints"></div>
+        </div>
+        <div class="panel">
+          <h2>Actions</h2>
+          <div class="row">
+            <button id="btnReset">Reset</button>
+            <button class="secondary" id="btnBoot">Bootloader</button>
+            <button class="secondary" id="btnClear">Clear logs</button>
+          </div>
+          <label>Send</label>
+          <input id="sendText" type="text" placeholder="command…" />
+          <div class="row" id="presetRow">
+            <button id="btnSend">Send</button>
+          </div>
+        </div>
+      </aside>
+      <main class="panel">
+        <h2>Serial log</h2>
+        <div class="filters">
+          <label><input type="checkbox" id="fState" /> STATE only</label>
+          <label><input type="checkbox" id="fCrash" /> Crash only</label>
+        </div>
+        <div class="logbox" id="log"></div>
+      </main>
+    </div>
+  </div>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let ws = null;
+    let logs = [];
+
+    function setErr(msg) { $("err").textContent = msg || ""; }
+
+    async function refreshPorts() {
+      const r = await fetch("/api/ports");
+      const data = await r.json();
+      const sel = $("port");
+      const cur = sel.value;
+      sel.innerHTML = '<option value="">Select…</option>';
+      (data.ports || []).forEach((p) => {
+        const o = document.createElement("option");
+        o.value = p.device;
+        o.textContent = `${p.device}${p.likely_esp ? " ★" : ""} — ${p.description || ""}`;
+        sel.appendChild(o);
+      });
+      sel.value = cur || data.suggested || "";
+    }
+
+    function renderLogs() {
+      const st = $("fState").checked;
+      const cr = $("fCrash").checked;
+      const box = $("log");
+      box.innerHTML = "";
+      logs.filter((l) => {
+        if (st && l.tag !== "state" && !/STATE:/i.test(l.line)) return false;
+        if (cr && l.tag !== "crash" && !/ESP_ERROR|abort|Backtrace/i.test(l.line)) return false;
+        return true;
+      }).forEach((l) => {
+        const div = document.createElement("div");
+        if (l.tag === "crash") div.className = "bad";
+        div.innerHTML = `<span class="meta">[${l.ts}] </span>${l.tag ? `<span class="tag">[${l.tag}]</span>` : ""}${escapeHtml(l.line)}`;
+        box.appendChild(div);
+      });
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function escapeHtml(s) {
+      return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+
+    function applyProvision(p) {
+      if (!p) return;
+      const el = $("provStatus");
+      el.textContent = p.status || "unknown";
+      el.className = "status " + (p.status === "connected" ? "ok" : (p.status === "configuring" || p.status === "unprovisioned") ? "warn" : "");
+      $("provSoftap").textContent = "SoftAP: " + (p.softap_ssid || "—");
+      $("provUrl").textContent = "URL: " + (p.ap_url || "—");
+      $("provIp").textContent = "IP: " + (p.ip || "—");
+      $("provMqtt").textContent = "MQTT: " + (p.mqtt || "—");
+      $("provHints").textContent = (p.hints || []).slice(0, 3).join(" ");
+    }
+
+    function stopStream() {
+      if (ws) { ws.close(); ws = null; }
+      $("connMeta").textContent = "Idle";
+    }
+
+    function startStream() {
+      stopStream();
+      const proto = location.protocol === "https:" ? "wss" : "ws";
+      ws = new WebSocket(`${proto}://${location.host}/ws/logs`);
+      ws.onmessage = (ev) => {
+        const msg = JSON.parse(ev.data);
+        if (msg.type === "error") { setErr(msg.error); return; }
+        if (msg.type === "ready") { $("connMeta").textContent = "Connected · streaming"; setErr(""); return; }
+        if (msg.type === "line") {
+          logs.push({ ts: msg.ts, tag: msg.tag, line: msg.line });
+          if (logs.length > 2000) logs = logs.slice(-2000);
+          if (msg.provision) applyProvision({ status: msg.provision });
+          renderLogs();
+        }
+      };
+      ws.onclose = () => { $("connMeta").textContent = "Disconnected"; };
+      ws.onerror = () => setErr("WebSocket error — is serial free?");
+    }
+
+    $("btnConnect").onclick = async () => {
+      setErr("");
+      const r = await fetch("/api/connect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ port: $("port").value, baud: Number($("baud").value) }),
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) { setErr(data.detail || "Connect failed"); return; }
+      startStream();
+    };
+    $("btnDisconnect").onclick = async () => {
+      stopStream();
+      await fetch("/api/disconnect", { method: "POST" });
+    };
+    $("btnRefresh").onclick = () => refreshPorts();
+    $("btnReset").onclick = () => fetch("/api/reset", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+    $("btnBoot").onclick = () => fetch("/api/reset", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ bootloader: true }) });
+    $("btnClear").onclick = () => { logs = []; renderLogs(); };
+    $("btnPortal").onclick = () => fetch("/api/provision/open", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+    $("btnSend").onclick = async () => {
+      const text = $("sendText").value;
+      if (!text) return;
+      const r = await fetch("/api/send", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }) });
+      if (!r.ok) { const d = await r.json().catch(() => ({})); setErr(d.detail || "Send failed"); }
+    };
+    $("sendText").onkeydown = (e) => { if (e.key === "Enter") $("btnSend").click(); };
+    $("fState").onchange = renderLogs;
+    $("fCrash").onchange = renderLogs;
+
+    (async () => {
+      await refreshPorts();
+      const pr = await fetch("/api/presets").then((r) => r.json()).catch(() => ({ presets: [] }));
+      (pr.presets || []).forEach((p) => {
+        const b = document.createElement("button");
+        b.className = "secondary";
+        b.textContent = p.name;
+        b.onclick = () => fetch("/api/send", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: p.text }) });
+        $("presetRow").appendChild(b);
+      });
+      setInterval(async () => {
+        const s = await fetch("/api/status").then((r) => r.json()).catch(() => null);
+        if (s && s.provision) applyProvision(s.provision);
+      }, 2000);
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+# Example project presets — copy keys into xzkit.toml [presets]
+
+[presets]
+ping = "ping"
+help = "help"
+version = "version"

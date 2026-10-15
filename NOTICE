@@ -1,0 +1,8 @@
+Xiaozhi Kit
+Copyright (c) 2026 Xiaozhi Kit Contributors
+
+This project includes third-party software:
+
+- pyserial (BSD) — https://github.com/pyserial/pyserial
+- FastAPI (MIT) — https://github.com/fastapi/fastapi
+- Uvicorn (BSD) — https://github.com/encode/uvicorn

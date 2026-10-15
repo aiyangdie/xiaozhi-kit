@@ -1,0 +1,4 @@
+E (900) wifi:ESP_ERR_WIFI_NOT_STARTED
+ESP_ERROR_CHECK failed: esp_err_t 0x3001 (ESP_ERR_WIFI_NOT_STARTED) at 0x42012345
+abort() was called at PC 0x42012346
+Backtrace: 0x4038xxxx:0x3fcaxxxx

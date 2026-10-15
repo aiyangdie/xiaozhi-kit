@@ -31,9 +31,9 @@ dev = ["pytest>=7.0", "ruff>=0.3"]
 xzkit = "xzkit_cli.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/xiaozhi-kit/xiaozhi-kit"
-Documentation = "https://xiaozhi-kit.github.io/xiaozhi-kit/"
-Repository = "https://github.com/xiaozhi-kit/xiaozhi-kit"
+Homepage = "https://github.com/aiyangdie/xiaozhi-kit"
+Documentation = "https://aiyangdie.github.io/xiaozhi-kit/"
+Repository = "https://github.com/aiyangdie/xiaozhi-kit"
 
 [build-system]
 requires = ["hatchling"]

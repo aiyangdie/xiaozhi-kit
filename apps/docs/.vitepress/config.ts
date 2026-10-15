@@ -8,7 +8,7 @@ export default defineConfig({
     nav: [
       { text: "Guide", link: "/guide/install" },
       { text: "CLI", link: "/guide/cli" },
-      { text: "GitHub", link: "https://github.com/xiaozhi-kit/xiaozhi-kit" },
+      { text: "GitHub", link: "https://github.com/aiyangdie/xiaozhi-kit" },
     ],
     sidebar: [
       {
@@ -31,7 +31,7 @@ export default defineConfig({
       },
     ],
     socialLinks: [
-      { icon: "github", link: "https://github.com/xiaozhi-kit/xiaozhi-kit" },
+      { icon: "github", link: "https://github.com/aiyangdie/xiaozhi-kit" },
     ],
     footer: {
       message: "Released under the MIT License.",

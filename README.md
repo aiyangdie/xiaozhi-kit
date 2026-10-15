@@ -7,13 +7,13 @@ Replaces closed serial GUIs that monopolize the COM port and cannot be driven by
 ## Install
 
 ```bash
-git clone https://github.com/xiaozhi-kit/xiaozhi-kit.git
+git clone https://github.com/aiyangdie/xiaozhi-kit.git
 cd xiaozhi-kit
 pip install -e ".[dev]"
 xzkit doctor --json
 ```
 
-Docs: https://xiaozhi-kit.github.io/xiaozhi-kit/
+Docs: https://aiyangdie.github.io/xiaozhi-kit/
 
 ## Quick start (AI / CLI)
 

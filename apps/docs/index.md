@@ -11,7 +11,7 @@ hero:
       link: /guide/install
     - theme: alt
       text: GitHub
-      link: https://github.com/xiaozhi-kit/xiaozhi-kit
+      link: https://github.com/aiyangdie/xiaozhi-kit
 
 features:
   - title: AI-first CLI

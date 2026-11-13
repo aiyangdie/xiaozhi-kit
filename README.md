@@ -1,3 +1,5 @@
+<p align="center"><img src="assets/covers/25-xiaozhi-kit.jpg" alt="xiaozhi-kit 项目封面" width="100%"></p>
+
 # Xiaozhi Kit
 
 Open-source toolkit for **ESP32 Xiaozhi** boards: AI-friendly CLI, local Web console, and Cursor Skill.

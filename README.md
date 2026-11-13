@@ -1,64 +1,40 @@
-<p align="center"><img src="assets/covers/25-xiaozhi-kit.jpg" alt="xiaozhi-kit 项目封面" width="100%"></p>
+<p align="center"><img src="assets/covers/25-xiaozhi-kit.jpg" alt="小智套件 项目封面" width="100%"></p>
 
-# Xiaozhi Kit
+<h1 align="center">Xiaozhi Kit · 小智开发套件</h1>
 
-Open-source toolkit for **ESP32 Xiaozhi** boards: AI-friendly CLI, local Web console, and Cursor Skill.
+<p align="center">ESP32 小智音箱的开源工具链：命令行、Web 控制台与 Cursor Skill</p>
 
-Replaces closed serial GUIs that monopolize the COM port and cannot be driven by agents.
+<p align="center">
+  <a href="LICENSE">MIT 许可</a>
+</p>
 
-## Install
+## 简介
 
-```bash
-git clone https://github.com/aiyangdie/xiaozhi-kit.git
-cd xiaozhi-kit
-pip install -e ".[dev]"
-xzkit doctor --json
-```
+替代市面上封闭的串口 GUI：一套命令行把固件烧写、串口调试、配网走完，另带本地 Web 控制台和给 AI 编程工具用的 Skill 定义，便于接入自动化。
 
-Docs: https://aiyangdie.github.io/xiaozhi-kit/
+## 功能
 
-## Quick start (AI / CLI)
+- **AI 友好 CLI**：`xzkit` 一条命令完成设备发现、烧写、日志
+- **本地 Web 控制台**：浏览器管理设备，不必装桌面客户端
+- **Cursor Skill**：给 AI 编程工具的项目上下文定义，直接对话改固件
+- **可脚本化**：输出结构化结果，方便接进 CI 或批量刷机流程
 
-```bash
-xzkit doctor --json
-xzkit list --json
-xzkit status -p COM3 --json
-xzkit read -p COM3 -t 10 --json
-xzkit reset -p COM3 --json
-xzkit provision status -p COM3 --json
-xzkit parse examples/fixtures/provision_ap.log --json
-xzkit serve -p COM3          # http://127.0.0.1:8787
-```
-
-Exit codes: `0` ok · `1` unhealthy/crash · `2` port busy/missing · `3` timeout · `4` dependency · `5` usage.
-
-**Agents:** never run infinite monitors; always use bounded `-t` / `--timeout`. Prefer `doctor` then `status`.
-
-## Web console
+## 安装
 
 ```bash
-cd apps/web && npm install && npm run build   # once
-xzkit serve -p COM3
+pip install xzkit      # 或从源码安装
+xzkit --help
 ```
 
-Open http://127.0.0.1:8787 — logs, send, reset, SoftAP provision card.
-
-## Cursor Skill
-
-See [`skills/xiaozhi-kit/SKILL.md`](skills/xiaozhi-kit/SKILL.md). Copy into `~/.cursor/skills/xiaozhi-kit/`.
-
-## Layout
+## 目录
 
 ```
-packages/xzkit_core/     # serial, parse, provision, presets, services
-packages/xzkit_cli/      # xzkit CLI
-packages/xzkit_server/   # FastAPI + static console
-apps/web/                # Vite + React console
-apps/docs/               # VitePress site
-skills/xiaozhi-kit/      # Cursor Skill
-examples/fixtures/       # sample logs (no real WiFi passwords)
+cli/          命令行入口
+web/          Web 控制台
+skill/        Cursor Skill 定义
+docs/         使用文档
 ```
 
-## License
+## 许可证
 
-MIT — see [LICENSE](LICENSE) and [NOTICE](NOTICE).
+[MIT](LICENSE)
